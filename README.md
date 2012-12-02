@@ -6,7 +6,7 @@
 
 3) Enjoy...
 
-# Examples:
+### Examples:
 
 CPU
 
