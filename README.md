@@ -1,12 +1,22 @@
-## A Nagios|Shinken plugin to grab stats on a Glances server
+=========================================================
+A Nagios|Shinken plugin to grab stats on a Glances server
+=========================================================
+
+![screenshot](https://github.com/nicolargo/checkglances/raw/master/doc/checkglances.png)
+
+## What is it ?
+
+CheckGlances is a Nagios plugin. It can grab stat on a Glances server using a XML RCP over HTTP link.
+
+Glances server can be ran on GNU/Linux, BSD, Mac OS and Windows operating system.
 
 1) Start [Glances](http://nicolargo.github.com/glances/) server on yours hosts
 
-2) Configure Nagios|Shinken with the checkglances plugin
+2) Configure our Nagios|Shinken server with the CheckGlances plugin
 
 3) Enjoy...
 
-### Examples:
+## CLI Examples
 
 CPU
 
@@ -28,3 +38,47 @@ SWAP
     $ ./checkglances.py -H localhost -s swap
     SWAP consumption: 3.70% | 'used'=150159360.00 'total'=4080005120.00 'percent'=3.70 'free'=3929845760.00
 
+## How to configure Nagios ?
+
+First of all, copy the checkglances.py file to your Nagios plugin folder.
+
+Then enter the new section on your commands.cfg file:
+
+    define command{
+        command_name checkglances
+        command_line $USER1$/checkglances.py -H $HOSTADDRESS$ -s $ARG1$ -w $ARG2$ -c $ARG3$
+    }
+    
+Configure a new service for your host (where Glances server is up and running):
+
+    define service {
+        use generic-service
+        host_name myhost
+        service_description CPU
+        check_command checkglances!cpu!70!90
+    }
+
+    define service {
+        use generic-service
+        host_name myhost
+        service_description LOAD
+        check_command checkglances!load!1!5
+    }
+
+    define service {
+        use generic-service
+        host_name myhost
+        service_description MEM
+        check_command checkglances!mem!70!90
+    }
+
+    define service {
+        use generic-service
+        host_name myhost
+        service_description SWAP
+        check_command checkglances!swap!70!90
+    }
+
+## Coming soon...
+
+Others checks (file system, disk IO, network interface...)

@@ -20,7 +20,7 @@
 #
 
 __appname__ = 'CheckGlances'
-__version__ = "0.1b"
+__version__ = "0.1"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -104,11 +104,16 @@ class nagiosplugin(nagiospluginskeleton):
         # Display the standard syntax
         super(nagiosplugin, self).syntax()
         # Display the specific syntax
-        print("        "+_("-s <port>      Glances server TCP port (default 61209)")) 
+        print("        "+_("-p <port>      Glances server TCP port (default 61209)")) 
         print("        "+_("-s <stat>      Select stat to grab: %s") 
                                             % ", ".join(self.statslist))
 
 
+    def methodexist(self, server, method):
+        # Check if a method exist on the RCP server
+        return method in server.system.listMethods()
+
+    
     def check(self, host, warning, critical, **args):
         """
         INPUT
@@ -128,11 +133,37 @@ class nagiosplugin(nagiospluginskeleton):
         # Connect to the Glances server
         self.log(_("Check host: %s") % host)
         gs = xmlrpclib.ServerProxy('http://%s:%d' % (host, int(args['port'])))
-        
         self.log(_("Others args: %s") % args)
+
+        # Test RCP server connection
+        try:
+            # getSystem() was born in the 1.5.2 version of Glances
+            gs.getSystem()
+        except xmlrpclib.Fault as err:
+            # getSystem method unknown ?... mmhhh...
+            self.log(_("Warning: %s works better with Glances server 1.5.2 or higher") % __appname__)
+            pass
+        except:
+            print(_("Connection to Glances server failed"))
+            self.exit('UNKNOWN')            
+        
+        # DEBUG
+        #~ print gs.system.listMethods()
+        #~ print eval(gs.getSystem())
+        # END DEBUG
+        
         if (args['stat'] == "cpu"):
             # Get and eval CPU stat
-            cpu = eval(gs.getCpu())
+            if (self.methodexist(gs, "getCpu")):
+                try:
+                    cpu = eval(gs.getCpu())
+                except xmlrpclib.Fault as err:
+                    print(_("Can not run the Glances method: getCpu"))
+                    self.exit('UNKNOWN')                                
+            else:
+                print(_("Unknown method on the Glances server: getCpu"))
+                self.exit('UNKNOWN')                
+            #~ print cpu
             #~ If user|kernel|nice CPU is > 70%, then status is set to "WARNING".
             #~ If user|kernel|nice CPU is > 90%, then status is set to "CRITICAL".
             if (warning is None): warning = 70
@@ -145,24 +176,49 @@ class nagiosplugin(nagiospluginskeleton):
             for key in cpu:
                 checked_message += " '%s'=%.2f" % (key, cpu[key])
         elif (args['stat'] == "load"):
-            # Get and eval LOAD stat
-            load = eval(gs.getLoad())
-            #~ core = eval(gs.getCore())
-            core = 1
+            # Get and eval CORE and LOAD stat
+            if (self.methodexist(gs, "getCore")):
+                try:
+                    core = gs.getCore()
+                except xmlrpclib.Fault as err:
+                    print(_("Can not run the Glances method: getLoad"))
+                    self.exit('UNKNOWN')                                
+            else:
+                print(_("Can not run the Glances method: getCore"))
+                self.exit('UNKNOWN')                                
+            if (self.methodexist(gs, "getLoad")):
+                try:
+                    load = eval(gs.getLoad())
+                except xmlrpclib.Fault as err:
+                    print(_("Can not run the Glances method: getLoad"))
+                    self.exit('UNKNOWN')                                
+            else:
+                print(_("Unknown method on the Glances server: getLoad"))
+                self.exit('UNKNOWN')
             #~ If average load is > 1*Core, then status is set to "WARNING".
             #~ If average load is > 5*Core, then status is set to "CRITICAL".
-            if (warning is None): warning = core
-            if (critical is None): critical = 5*core 
+            if (warning is None): warning = 1
+            if (critical is None): critical = 5
+            warning *= core
+            critical *= core 
             checked_value = load['min5']
             # Plugin output
-            checked_message = _("LOAD last 5 minutes: %.2f%%") % checked_value
+            checked_message = _("LOAD last 5 minutes: %.2f") % checked_value
             # Performance data
             checked_message += _(" |")
             for key in load:
                 checked_message += " '%s'=%.2f" % (key, load[key])
         elif (args['stat'] == "mem"):
             # Get and eval MEM stat
-            mem = eval(gs.getMem())
+            if (self.methodexist(gs, "getMem")):
+                try:
+                    mem = eval(gs.getMem())
+                except xmlrpclib.Fault as err:
+                    print(_("Can not run the Glances method: getMem"))
+                    self.exit('UNKNOWN')                                
+            else:
+                print(_("Unknown method on the Glances server: getMem"))
+                self.exit('UNKNOWN')
             #~ If memory is > 70%, then status is set to "WARNING".
             #~ If memory is > 90%, then status is set to "CRITICAL"
             if (warning is None): warning = 70
@@ -176,7 +232,15 @@ class nagiosplugin(nagiospluginskeleton):
                 checked_message += " '%s'=%.2f" % (key, mem[key])
         elif (args['stat'] == "swap"):
             # Get and eval MEM stat
-            swap = eval(gs.getMemSwap())
+            if (self.methodexist(gs, "getMemSwap")):
+                try:
+                    swap = eval(gs.getMemSwap())
+                except xmlrpclib.Fault as err:
+                    print(_("Can not run the Glances method: getMemSwap"))
+                    self.exit('UNKNOWN')                                
+            else:
+                print(_("Unknown method on the Glances server: getMemSwap"))
+                self.exit('UNKNOWN')
             #~ If memory is > 70%, then status is set to "WARNING".
             #~ If memory is > 90%, then status is set to "CRITICAL"
             if (warning is None): warning = 70
