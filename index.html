@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Checkglances : CheckGlances, a Nagios|Shinken plugin for Glances" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Checkglances</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/nicolargo/checkglances">View on GitHub</a>
+
+          <h1 id="project_title">Checkglances</h1>
+          <h2 id="project_tagline">CheckGlances, a Nagios|Shinken plugin for Glances</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/nicolargo/checkglances/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/nicolargo/checkglances/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1></h1>
+
+<h1>A Nagios|Shinken plugin to grab stats on a Glances server</h1>
+
+<p><img src="https://github.com/nicolargo/checkglances/raw/master/doc/checkglances.png" alt="screenshot"></p>
+
+<h2>What is it ?</h2>
+
+<p>CheckGlances is a Nagios plugin. It can grab stat on a Glances server using a XML RCP over HTTP link.</p>
+
+<p>Glances server can be ran on GNU/Linux, BSD, Mac OS and Windows operating system.</p>
+
+<p>1) Start <a href="http://nicolargo.github.com/glances/">Glances</a> server on yours hosts</p>
+
+<p>2) Configure our Nagios|Shinken server with the CheckGlances plugin</p>
+
+<p>3) Enjoy...</p>
+
+<h2>CLI Examples</h2>
+
+<p>CPU</p>
+
+<pre><code>$ ./checkglances.py -H localhost -s cpu
+CPU consumption: 2.96% | 'percent'=2.96 'kernel'=0.73 'iowait'=0.20 'idle'=97.04 'user'=1.89 'irq'=0.00 'nice'=0.00
+</code></pre>
+
+<p>LOAD</p>
+
+<pre><code>$ ./checkglances.py -H localhost -s load
+LOAD last 5 minutes: 0.22% | 'min1'=0.13 'min5'=0.22 'min15'=0.29
+</code></pre>
+
+<p>MEM</p>
+
+<pre><code>$ ./checkglances.py -H localhost -s mem
+MEM consumption: 59.50% | 'used'=3411509248.00 'cache'=1071792128.00 'total'=3934547968.00 'percent'=59.50 'free'=523038720.00
+</code></pre>
+
+<p>SWAP</p>
+
+<pre><code>$ ./checkglances.py -H localhost -s swap
+SWAP consumption: 3.70% | 'used'=150159360.00 'total'=4080005120.00 'percent'=3.70 'free'=3929845760.00
+</code></pre>
+
+<h2>How to configure Nagios ?</h2>
+
+<p>First of all, copy the checkglances.py file to your Nagios plugin folder.</p>
+
+<p>Then enter the new section on your commands.cfg file:</p>
+
+<pre><code>define command{
+    command_name checkglances
+    command_line $USER1$/checkglances.py -H $HOSTADDRESS$ -s $ARG1$ -w $ARG2$ -c $ARG3$
+}
+</code></pre>
+
+<p>Configure a new service for your host (where Glances server is up and running):</p>
+
+<pre><code>define service {
+    use generic-service
+    host_name myhost
+    service_description CPU
+    check_command checkglances!cpu!70!90
+}
+
+define service {
+    use generic-service
+    host_name myhost
+    service_description LOAD
+    check_command checkglances!load!1!5
+}
+
+define service {
+    use generic-service
+    host_name myhost
+    service_description MEM
+    check_command checkglances!mem!70!90
+}
+
+define service {
+    use generic-service
+    host_name myhost
+    service_description SWAP
+    check_command checkglances!swap!70!90
+}
+</code></pre>
+
+<h2>Coming soon...</h2>
+
+<p>Others checks (file system, disk IO, network interface...)</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Checkglances maintained by <a href="https://github.com/nicolargo">nicolargo</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
