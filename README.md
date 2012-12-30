@@ -38,6 +38,21 @@ SWAP
     $ ./checkglances.py -H localhost -s swap
     SWAP consumption: 3.70% | 'used'=150159360.00 'total'=4080005120.00 'percent'=3.70 'free'=3929845760.00
 
+PROCESS
+
+    $ ./checkglances.py -H localhost -s process
+    Running processes: 1 | 'running'=1 'total'=143 'sleeping'=142
+
+NETWORK
+
+    $ ./checkglances.py -H localhost -s net -e eth0
+    Network rate: 5479658 | 'interface_name'=eth0 'rx'=327514 'tx'=5479658
+
+FILE SYSTEM
+
+    $ ./checkglances.py -H localhost -s fs -e /
+    FS using space: 8% | 'mnt_point'=/ 'used'=22371450880 'device_name'=/dev/sda2 'avail'=910404046848 'fs_type'=ext4 'size'=982693486592
+
 ## How to configure Nagios ?
 
 First of all, copy the checkglances.py file to your Nagios plugin folder.
@@ -47,6 +62,11 @@ Then enter the new section on your commands.cfg file:
     define command{
         command_name checkglances
         command_line $USER1$/checkglances.py -H $HOSTADDRESS$ -s $ARG1$ -w $ARG2$ -c $ARG3$
+    }
+
+    define command{
+        command_name checkglanceswithparam
+        command_line $USER1$/checkglances.py -H $HOSTADDRESS$ -s $ARG1$ -e $ARG2$-w $ARG3$ -c $ARG4$
     }
     
 Configure a new service for your host (where Glances server is up and running):
@@ -79,6 +99,27 @@ Configure a new service for your host (where Glances server is up and running):
         check_command checkglances!swap!70!90
     }
 
+    define service {
+        use generic-service
+        host_name myhost
+        service_description PROCESS
+        check_command checkglances!process!30!100
+    }
+
+    define service {
+        use generic-service
+        host_name myhost
+        service_description NETWORK eth0
+        check_command checkglanceswithparam!net!eth0!7500000!10000000
+    }
+
+    define service {
+        use generic-service
+        host_name myhost
+        service_description FILESYSTEM /
+        check_command checkglanceswithparam!fs!/!70!90
+    }
+
 ## Coming soon...
 
-Others checks (file system, disk IO, network interface...)
+Disk IO

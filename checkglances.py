@@ -20,7 +20,7 @@
 #
 
 __appname__ = 'CheckGlances'
-__version__ = "0.1"
+__version__ = "0.2"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -67,7 +67,7 @@ class nagiospluginskeleton(object):
         """
         Returns the plugin syntax
         """
-        print(_("Syntax: %s -Vhv -H <host> -w <warning> -c <critical>") % (format(sys.argv[0])))
+        print(_("Syntax: %s -Vhv -H <host> -p <port> -s <stat> [-e <param>] -w <warning> -c <critical>") % (format(sys.argv[0])))
         print("")
         print("        "+_("-V             Display version and exit"))
         print("        "+_("-h             Display syntax and exit"))
@@ -98,7 +98,8 @@ class nagiosplugin(nagiospluginskeleton):
     These class defines your Nagios Plugin
     """
 
-    statslist = ('cpu', 'load', 'mem', 'swap')
+    statslist = ('cpu', 'load', 'mem', 'swap', 'process', 'net', 'diskio', 'fs')
+    statsparamslist = ( 'net' , 'diskio' , 'fs')
 
     def syntax(self):
         # Display the standard syntax
@@ -107,6 +108,8 @@ class nagiosplugin(nagiospluginskeleton):
         print("        "+_("-p <port>      Glances server TCP port (default 61209)")) 
         print("        "+_("-s <stat>      Select stat to grab: %s") 
                                             % ", ".join(self.statslist))
+        print("        "+_("-e <param>     Extended parameter for stat: %s")
+                                            % ", ".join(self.statsparamslist)) 
 
 
     def methodexist(self, server, method):
@@ -153,13 +156,17 @@ class nagiosplugin(nagiospluginskeleton):
         # END DEBUG
         
         if (args['stat'] == "cpu"):
+
             # Get and eval CPU stat
+
             if (self.methodexist(gs, "getCpu")):
                 try:
                     cpu = eval(gs.getCpu())
                 except xmlrpclib.Fault as err:
                     print(_("Can not run the Glances method: getCpu"))
                     self.exit('UNKNOWN')                                
+                else:
+                    self.log(cpu)
             else:
                 print(_("Unknown method on the Glances server: getCpu"))
                 self.exit('UNKNOWN')                
@@ -176,13 +183,17 @@ class nagiosplugin(nagiospluginskeleton):
             for key in cpu:
                 checked_message += " '%s'=%.2f" % (key, cpu[key])
         elif (args['stat'] == "load"):
+
             # Get and eval CORE and LOAD stat
+
             if (self.methodexist(gs, "getCore")):
                 try:
                     core = gs.getCore()
                 except xmlrpclib.Fault as err:
                     print(_("Can not run the Glances method: getLoad"))
                     self.exit('UNKNOWN')                                
+                else:
+                    self.log(core)
             else:
                 print(_("Can not run the Glances method: getCore"))
                 self.exit('UNKNOWN')                                
@@ -192,6 +203,8 @@ class nagiosplugin(nagiospluginskeleton):
                 except xmlrpclib.Fault as err:
                     print(_("Can not run the Glances method: getLoad"))
                     self.exit('UNKNOWN')                                
+                else:
+                    self.log(load)
             else:
                 print(_("Unknown method on the Glances server: getLoad"))
                 self.exit('UNKNOWN')
@@ -209,13 +222,17 @@ class nagiosplugin(nagiospluginskeleton):
             for key in load:
                 checked_message += " '%s'=%.2f" % (key, load[key])
         elif (args['stat'] == "mem"):
+
             # Get and eval MEM stat
+
             if (self.methodexist(gs, "getMem")):
                 try:
                     mem = eval(gs.getMem())
                 except xmlrpclib.Fault as err:
                     print(_("Can not run the Glances method: getMem"))
                     self.exit('UNKNOWN')                                
+                else:
+                    self.log(mem)
             else:
                 print(_("Unknown method on the Glances server: getMem"))
                 self.exit('UNKNOWN')
@@ -231,13 +248,17 @@ class nagiosplugin(nagiospluginskeleton):
             for key in mem:
                 checked_message += " '%s'=%.2f" % (key, mem[key])
         elif (args['stat'] == "swap"):
+
             # Get and eval MEM stat
+
             if (self.methodexist(gs, "getMemSwap")):
                 try:
                     swap = eval(gs.getMemSwap())
                 except xmlrpclib.Fault as err:
                     print(_("Can not run the Glances method: getMemSwap"))
                     self.exit('UNKNOWN')                                
+                else:
+                    self.log(swap)
             else:
                 print(_("Unknown method on the Glances server: getMemSwap"))
                 self.exit('UNKNOWN')
@@ -252,7 +273,141 @@ class nagiosplugin(nagiospluginskeleton):
             checked_message += _(" |")
             for key in swap:
                 checked_message += " '%s'=%.2f" % (key, swap[key])
+        elif (args['stat'] == "process"):
+
+            # Get and eval Process stat
+
+            if (self.methodexist(gs, "getProcessCount")):
+                try:
+                    process = eval(gs.getProcessCount())
+                except xmlrpclib.Fault as err:
+                    print(_("Can not run the Glances method: getProcessCount"))
+                    self.exit('UNKNOWN')                                
+                else:
+                    self.log(process)
+            else:
+                print(_("Unknown method on the Glances server: getProcessCount"))
+                self.exit('UNKNOWN')
+            #~ If running process is > 50, then status is set to "WARNING".
+            #~ If running process is > 100, then status is set to "CRITICAL"
+            if (warning is None): warning = 50
+            if (critical is None): critical = 100
+            checked_value = process['running']
+            # Plugin output
+            checked_message = _("Running processes: %d") % checked_value
+            # Performance data
+            checked_message += _(" |")
+            for key in process:
+                checked_message += " '%s'=%d" % (key, process[key])
+        elif (args['stat'] == "net"):
+
+            # Get and eval Network stat
+
+            if (self.methodexist(gs, "getNetwork")):
+                try:
+                    net = eval(gs.getNetwork())
+                except xmlrpclib.Fault as err:
+                    print(_("Can not run the Glances method: getNetwork"))
+                    self.exit('UNKNOWN')                                
+                else:
+                    self.log(net)
+            else:
+                print(_("Unknown method on the Glances server: getNetwork"))
+                self.exit('UNKNOWN')
+            #~ If net[param] > 60 Mbps, then status is set to "WARNING".
+            #~ If net[param] > 80 Mbps, then status is set to "CRITICAL"
+            # Values are in Kbyte/second
+            if (warning is None): warning = 7500000
+            if (critical is None): critical = 10000000
+            checked_value = -1
+            for interface in net:
+                if interface['interface_name'] == args['statparam']:
+                    checked_value = max(interface["tx"], interface["rx"])
+                    break
+            if (checked_value == -1):
+                print(_("Unknown network interface: %s") % args['statparam'])
+                self.exit('UNKNOWN')                
+            # Plugin output
+            checked_message = _("Network rate: %d") % checked_value
+            # Performance data
+            checked_message += _(" |")
+            for key in interface:
+                checked_message += " '%s'=%s" % (key, interface[key])
+        elif (args['stat'] == "diskio"):
+
+            # Get and eval Network stat
+            
+            # !!! Not yet available
+            # Need to implement "read_rate" and "write_rate" In Glances
+            print(_("Not yet available? sorry, had to wait next version"))
+            self.exit('UNKNOWN')                                
+
+            if (self.methodexist(gs, "getDiskIO")):
+                try:
+                    diskio = eval(gs.getDiskIO())
+                except xmlrpclib.Fault as err:
+                    print(_("Can not run the Glances method: getDiskIO"))
+                    self.exit('UNKNOWN')                                
+                else:
+                    self.log(diskio)
+            else:
+                print(_("Unknown method on the Glances server: getDiskIO"))
+                self.exit('UNKNOWN')
+            #~ If diskio[param] > 30 Mbytes/sec, then status is set to "WARNING".
+            #~ If diskio[param] > 40 MBytes/sec, then status is set to "CRITICAL"
+            if (warning is None): warning = 30000000
+            if (critical is None): critical = 40000000
+            checked_value = -1
+            for disk in diskio:
+                if disk['disk_name'] == args['statparam']:
+                    checked_value = max(disk["read_rate"], disk["write_rate"])
+                    break
+            if (checked_value == -1):
+                print(_("Unknown disk: %s") % args['statparam'])
+                self.exit('UNKNOWN')                
+            # Plugin output
+            checked_message = _("Disk IO: %d") % checked_value
+            # Performance data
+            checked_message += _(" |")
+            for key in disk:
+                checked_message += " '%s'=%s" % (key, disk[key])
+        elif (args['stat'] == "fs"):
+
+            # Get and eval Network stat
+            
+            if (self.methodexist(gs, "getFs")):
+                try:
+                    fs = eval(gs.getFs())
+                except xmlrpclib.Fault as err:
+                    print(_("Can not run the Glances method: getFs"))
+                    self.exit('UNKNOWN')                                
+                else:
+                    self.log(fs)
+            else:
+                print(_("Unknown method on the Glances server: getFs"))
+                self.exit('UNKNOWN')
+            #~ If fs[param] > %, then status is set to "WARNING".
+            #~ If fs[param] > %, then status is set to "CRITICAL"
+            if (warning is None): warning = 70
+            if (critical is None): critical = 90
+            checked_value = -1
+            for disk in fs:
+                if disk['mnt_point'] == args['statparam']:
+                    checked_value = 100 - (100 * disk["avail"] / disk["size"])
+                    break
+            if (checked_value == -1):
+                print(_("Unknown mounting point: %s") % args['statparam'])
+                self.exit('UNKNOWN')                
+            # Plugin output
+            checked_message = _("FS using space: %d%%") % checked_value
+            # Performance data
+            checked_message += _(" |")
+            for key in disk:
+                checked_message += " '%s'=%s" % (key, disk[key])
         else:
+
+            # Else... 
+            
             print(_("Unknown stat: %s") % args['stat'])
             self.exit('UNKNOWN')
 
@@ -286,7 +441,7 @@ def main():
     try:
         # Add optional tag definition here
         # ...
-        opts, args = getopt.getopt(sys.argv[1:], "VhvH:p:w:c:s:")
+        opts, args = getopt.getopt(sys.argv[1:], "VhvH:p:w:c:s:e:")
     except getopt.GetoptError, err:
         plugin.syntax()
         plugin.exit('UNKNOWN')
@@ -295,6 +450,7 @@ def main():
     warning = None
     critical = None
     port = 61209
+    statparam = ""
     
     for opt, arg in opts:
         # Standard tag definition
@@ -317,6 +473,8 @@ def main():
             critical = arg
         elif opt in ("-s", "--stat"):
             stat = arg
+        elif opt in ("-e", "--statparam"):
+            statparam = arg
         else:
             # Tag is UNKNOW
             plugin.syntax()
@@ -337,9 +495,19 @@ def main():
         if stat not in plugin.statslist:
             print(_("Use -s with value in %s") % ", ".join(plugin.statslist))        
             plugin.exit('UNKNOWN')
+        if (stat == "net") and (statparam == ""):
+            print(_("You need to specified the interface name with -e <interface>"))         
+            plugin.exit('UNKNOWN')
+        if (stat == "diskio") and (statparam == ""):
+            print(_("You need to specified the disk name with -e <disk>"))         
+            plugin.exit('UNKNOWN')
+        if (stat == "fs") and (statparam == ""):
+            print(_("You need to specified the mounting point with -e <fs>"))         
+            plugin.exit('UNKNOWN')
+            
         
     # Do the check
-    plugin.check(host, warning, critical, port = port, stat = stat)
+    plugin.check(host, warning, critical, port = port, stat = stat, statparam = statparam)
 
 
 # Main program
