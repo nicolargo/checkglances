@@ -20,7 +20,7 @@
 #
 
 __appname__ = 'CheckGlances'
-__version__ = "0.2"
+__version__ = "0.3"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -67,7 +67,7 @@ class nagiospluginskeleton(object):
         """
         Returns the plugin syntax
         """
-        print(_("Syntax: %s -Vhv -H <host> -p <port> -s <stat> [-e <param>] -w <warning> -c <critical>") % (format(sys.argv[0])))
+        print(_("Syntax: %s -Vhv -H <host> [-p <port>] [-P <password>] -s <stat> [-e <param>] -w <warning> -c <critical>") % (format(sys.argv[0])))
         print("")
         print("        "+_("-V             Display version and exit"))
         print("        "+_("-h             Display syntax and exit"))
@@ -106,6 +106,7 @@ class nagiosplugin(nagiospluginskeleton):
         super(nagiosplugin, self).syntax()
         # Display the specific syntax
         print("        "+_("-p <port>      Glances server TCP port (default 61209)")) 
+        print("        "+_("-P <password>  Glances server password (optional)")) 
         print("        "+_("-s <stat>      Select stat to grab: %s") 
                                             % ", ".join(self.statslist))
         print("        "+_("-e <param>     Extended parameter for stat: %s")
@@ -135,7 +136,11 @@ class nagiosplugin(nagiospluginskeleton):
         
         # Connect to the Glances server
         self.log(_("Check host: %s") % host)
-        gs = xmlrpclib.ServerProxy('http://%s:%d' % (host, int(args['port'])))
+        if (args['password'] != ''):
+            gs = xmlrpclib.ServerProxy('http://%s:%s@%s:%d' % \
+                ('glances', args['password'], host, int(args['port'])))
+        else:
+            gs = xmlrpclib.ServerProxy('http://%s:%d' % (host, int(args['port'])))
         self.log(_("Others args: %s") % args)
 
         # Test RCP server connection
@@ -339,7 +344,7 @@ class nagiosplugin(nagiospluginskeleton):
             
             # !!! Not yet available
             # Need to implement "read_rate" and "write_rate" In Glances
-            print(_("Not yet available? sorry, had to wait next version"))
+            print(_("Not yet available. Sorry, had to wait next version"))
             self.exit('UNKNOWN')                                
 
             if (self.methodexist(gs, "getDiskIO")):
@@ -441,7 +446,7 @@ def main():
     try:
         # Add optional tag definition here
         # ...
-        opts, args = getopt.getopt(sys.argv[1:], "VhvH:p:w:c:s:e:")
+        opts, args = getopt.getopt(sys.argv[1:], "VhvH:p:P:w:c:s:e:")
     except getopt.GetoptError, err:
         plugin.syntax()
         plugin.exit('UNKNOWN')
@@ -450,6 +455,7 @@ def main():
     warning = None
     critical = None
     port = 61209
+    password = ""
     statparam = ""
     
     for opt, arg in opts:
@@ -467,6 +473,8 @@ def main():
             host = arg
         elif opt in ("-p", "--port"):
             port = arg
+        elif opt in ("-P", "--password"):
+            password = arg
         elif opt in ("-w", "--warning"):
             warning = arg
         elif opt in ("-c", "--critical"):
@@ -507,7 +515,8 @@ def main():
             
         
     # Do the check
-    plugin.check(host, warning, critical, port = port, stat = stat, statparam = statparam)
+    plugin.check(host, warning, critical, port = port, password = password, \
+                 stat = stat, statparam = statparam)
 
 
 # Main program
