@@ -75,6 +75,24 @@ MEM consumption: 59.50% | 'used'=3411509248.00 'cache'=1071792128.00 'total'=393
 SWAP consumption: 3.70% | 'used'=150159360.00 'total'=4080005120.00 'percent'=3.70 'free'=3929845760.00
 </code></pre>
 
+<p>PROCESS</p>
+
+<pre><code>$ ./checkglances.py -H localhost -s process
+Running processes: 1 | 'running'=1 'total'=143 'sleeping'=142
+</code></pre>
+
+<p>NETWORK</p>
+
+<pre><code>$ ./checkglances.py -H localhost -s net -e eth0
+Network rate: 5479658 | 'interface_name'=eth0 'rx'=327514 'tx'=5479658
+</code></pre>
+
+<p>FILE SYSTEM</p>
+
+<pre><code>$ ./checkglances.py -H localhost -s fs -e /
+FS using space: 8% | 'mnt_point'=/ 'used'=22371450880 'device_name'=/dev/sda2 'avail'=910404046848 'fs_type'=ext4 'size'=982693486592
+</code></pre>
+
 <h2>How to configure Nagios ?</h2>
 
 <p>First of all, copy the checkglances.py file to your Nagios plugin folder.</p>
@@ -84,6 +102,11 @@ SWAP consumption: 3.70% | 'used'=150159360.00 'total'=4080005120.00 'percent'=3.
 <pre><code>define command{
     command_name checkglances
     command_line $USER1$/checkglances.py -H $HOSTADDRESS$ -s $ARG1$ -w $ARG2$ -c $ARG3$
+}
+
+define command{
+    command_name checkglanceswithparam
+    command_line $USER1$/checkglances.py -H $HOSTADDRESS$ -s $ARG1$ -e $ARG2$-w $ARG3$ -c $ARG4$
 }
 </code></pre>
 
@@ -116,11 +139,32 @@ define service {
     service_description SWAP
     check_command checkglances!swap!70!90
 }
+
+define service {
+    use generic-service
+    host_name myhost
+    service_description PROCESS
+    check_command checkglances!process!30!100
+}
+
+define service {
+    use generic-service
+    host_name myhost
+    service_description NETWORK eth0
+    check_command checkglanceswithparam!net!eth0!7500000!10000000
+}
+
+define service {
+    use generic-service
+    host_name myhost
+    service_description FILESYSTEM /
+    check_command checkglanceswithparam!fs!/!70!90
+}
 </code></pre>
 
 <h2>Coming soon...</h2>
 
-<p>Others checks (file system, disk IO, network interface...)</p>
+<p>Disk IO</p>
       </section>
     </div>
 
