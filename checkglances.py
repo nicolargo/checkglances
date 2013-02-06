@@ -20,7 +20,7 @@
 #
 
 __appname__ = 'CheckGlances'
-__version__ = "0.3"
+__version__ = "0.4"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -30,6 +30,7 @@ __licence__ = "LGPL"
 import sys
 import getopt
 import xmlrpclib
+import json
 import gettext
 gettext.install(__appname__)
 
@@ -166,7 +167,7 @@ class nagiosplugin(nagiospluginskeleton):
 
             if (self.methodexist(gs, "getCpu")):
                 try:
-                    cpu = eval(gs.getCpu())
+                    cpu = json.loads(gs.getCpu())
                 except xmlrpclib.Fault as err:
                     print(_("Can not run the Glances method: getCpu"))
                     self.exit('UNKNOWN')                                
@@ -232,7 +233,7 @@ class nagiosplugin(nagiospluginskeleton):
 
             if (self.methodexist(gs, "getMem")):
                 try:
-                    mem = eval(gs.getMem())
+                    mem = json.loads(gs.getMem())
                 except xmlrpclib.Fault as err:
                     print(_("Can not run the Glances method: getMem"))
                     self.exit('UNKNOWN')                                
@@ -258,7 +259,7 @@ class nagiosplugin(nagiospluginskeleton):
 
             if (self.methodexist(gs, "getMemSwap")):
                 try:
-                    swap = eval(gs.getMemSwap())
+                    swap = json.loads(gs.getMemSwap())
                 except xmlrpclib.Fault as err:
                     print(_("Can not run the Glances method: getMemSwap"))
                     self.exit('UNKNOWN')                                
@@ -284,7 +285,7 @@ class nagiosplugin(nagiospluginskeleton):
 
             if (self.methodexist(gs, "getProcessCount")):
                 try:
-                    process = eval(gs.getProcessCount())
+                    process = json.loads(gs.getProcessCount())
                 except xmlrpclib.Fault as err:
                     print(_("Can not run the Glances method: getProcessCount"))
                     self.exit('UNKNOWN')                                
@@ -310,7 +311,7 @@ class nagiosplugin(nagiospluginskeleton):
 
             if (self.methodexist(gs, "getNetwork")):
                 try:
-                    net = eval(gs.getNetwork())
+                    net = json.loads(gs.getNetwork())
                 except xmlrpclib.Fault as err:
                     print(_("Can not run the Glances method: getNetwork"))
                     self.exit('UNKNOWN')                                
@@ -349,7 +350,7 @@ class nagiosplugin(nagiospluginskeleton):
 
             if (self.methodexist(gs, "getDiskIO")):
                 try:
-                    diskio = eval(gs.getDiskIO())
+                    diskio = json.loads(gs.getDiskIO())
                 except xmlrpclib.Fault as err:
                     print(_("Can not run the Glances method: getDiskIO"))
                     self.exit('UNKNOWN')                                
@@ -382,7 +383,7 @@ class nagiosplugin(nagiospluginskeleton):
             
             if (self.methodexist(gs, "getFs")):
                 try:
-                    fs = eval(gs.getFs())
+                    fs = json.loads(gs.getFs())
                 except xmlrpclib.Fault as err:
                     print(_("Can not run the Glances method: getFs"))
                     self.exit('UNKNOWN')                                
