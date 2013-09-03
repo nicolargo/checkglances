@@ -185,7 +185,7 @@ class nagiosplugin(nagiospluginskeleton):
             # Plugin output
             checked_message = _("CPU consumption: %.2f%%") % checked_value
             # Performance data
-            checked_message += _(" | 'percent'=%.2f") % checked_value
+            checked_message += _(" | 'percent'=%.2f;0;100;%s;%s") % (checked_value, warning, critical)
             for key in cpu:
                 checked_message += " '%s'=%.2f" % (key, cpu[key])
         elif (args['stat'] == "load"):
@@ -194,7 +194,7 @@ class nagiosplugin(nagiospluginskeleton):
 
             if (self.methodexist(gs, "getCore")):
                 try:
-                    core = gs.getCore()
+                    core = eval(gs.getCore())
                 except xmlrpclib.Fault as err:
                     print(_("Can not run the Glances method: getLoad"))
                     self.exit('UNKNOWN')                                
@@ -226,7 +226,12 @@ class nagiosplugin(nagiospluginskeleton):
             # Performance data
             checked_message += _(" |")
             for key in load:
-                checked_message += " '%s'=%.2f" % (key, load[key])
+                if (key == "min5"): 
+                    checked_message += " '%s'=%.2f;%s;%s" % (key, load[key], warning, critical)
+                else:
+                    checked_message += " '%s'=%.2f" % (key, load[key])
+                     
+
         elif (args['stat'] == "mem"):
 
             # Get and eval MEM stat
@@ -252,7 +257,12 @@ class nagiosplugin(nagiospluginskeleton):
             # Performance data
             checked_message += _(" |")
             for key in mem:
-                checked_message += " '%s'=%.2f" % (key, mem[key])
+                if (key == "min5"): 
+                    checked_message += " '%s'=%.2f;%s;%s" % (key, load[key], warning, critical)
+                else:
+                    checked_message += " '%s'=%.2f" % (key, load[key])
+                    
+                    
         elif (args['stat'] == "swap"):
 
             # Get and eval MEM stat
@@ -278,7 +288,12 @@ class nagiosplugin(nagiospluginskeleton):
             # Performance data
             checked_message += _(" |")
             for key in swap:
-                checked_message += " '%s'=%.2f" % (key, swap[key])
+                if (key == "min5"): 
+                    checked_message += " '%s'=%.2f;%s;%s" % (key, load[key], warning, critical)
+                else:
+                    checked_message += " '%s'=%.2f" % (key, load[key])
+                 
+
         elif (args['stat'] == "process"):
 
             # Get and eval Process stat
@@ -304,7 +319,12 @@ class nagiosplugin(nagiospluginskeleton):
             # Performance data
             checked_message += _(" |")
             for key in process:
-                checked_message += " '%s'=%d" % (key, process[key])
+                if (key == "min5"): 
+                    checked_message += " '%s'=%.2f;%s;%s" % (key, load[key], warning, critical)
+                else:
+                    checked_message += " '%s'=%.2f" % (key, load[key])
+                     
+
         elif (args['stat'] == "net"):
 
             # Get and eval Network stat
@@ -338,7 +358,12 @@ class nagiosplugin(nagiospluginskeleton):
             # Performance data
             checked_message += _(" |")
             for key in interface:
-                checked_message += " '%s'=%s" % (key, interface[key])
+                if (key == "min5"): 
+                    checked_message += " '%s'=%.2f;%s;%s" % (key, load[key], warning, critical)
+                else:
+                    checked_message += " '%s'=%.2f" % (key, load[key])
+                     
+
         elif (args['stat'] == "diskio"):
 
             # Get and eval Network stat
@@ -376,7 +401,12 @@ class nagiosplugin(nagiospluginskeleton):
             # Performance data
             checked_message += _(" |")
             for key in disk:
-                checked_message += " '%s'=%s" % (key, disk[key])
+                if (key == "min5"): 
+                    checked_message += " '%s'=%.2f;%s;%s" % (key, load[key], warning, critical)
+                else:
+                    checked_message += " '%s'=%.2f" % (key, load[key])
+                     
+
         elif (args['stat'] == "fs"):
 
             # Get and eval Network stat
@@ -410,6 +440,7 @@ class nagiosplugin(nagiospluginskeleton):
             checked_message += _(" |")
             for key in disk:
                 checked_message += " '%s'=%s" % (key, disk[key])
+            checked_message += " 'pctfree'=%s%%;%s;%s;0;100" % (checked_value,warning,critical)  
         else:
 
             # Else... 
