@@ -258,9 +258,9 @@ class nagiosplugin(nagiospluginskeleton):
             checked_message += _(" |")
             for key in mem:
                 if (key == "min5"): 
-                    checked_message += " '%s'=%.2f;%s;%s" % (key, load[key], warning, critical)
+                    checked_message += " '%s'=%.2f;%s;%s" % (key, mem[key], warning, critical)
                 else:
-                    checked_message += " '%s'=%.2f" % (key, load[key])
+                    checked_message += " '%s'=%.2f" % (key, mem[key])
                     
                     
         elif (args['stat'] == "swap"):
@@ -289,9 +289,9 @@ class nagiosplugin(nagiospluginskeleton):
             checked_message += _(" |")
             for key in swap:
                 if (key == "min5"): 
-                    checked_message += " '%s'=%.2f;%s;%s" % (key, load[key], warning, critical)
+                    checked_message += " '%s'=%.2f;%s;%s" % (key, swap[key], warning, critical)
                 else:
-                    checked_message += " '%s'=%.2f" % (key, load[key])
+                    checked_message += " '%s'=%.2f" % (key, swap[key])
                  
 
         elif (args['stat'] == "process"):
@@ -320,9 +320,9 @@ class nagiosplugin(nagiospluginskeleton):
             checked_message += _(" |")
             for key in process:
                 if (key == "min5"): 
-                    checked_message += " '%s'=%.2f;%s;%s" % (key, load[key], warning, critical)
+                    checked_message += " '%s'=%.2f;%s;%s" % (key, process[key], warning, critical)
                 else:
-                    checked_message += " '%s'=%.2f" % (key, load[key])
+                    checked_message += " '%s'=%.2f" % (key, process[key])
                      
 
         elif (args['stat'] == "net"):
@@ -358,10 +358,8 @@ class nagiosplugin(nagiospluginskeleton):
             # Performance data
             checked_message += _(" |")
             for key in interface:
-                if (key == "min5"): 
-                    checked_message += " '%s'=%.2f;%s;%s" % (key, load[key], warning, critical)
-                else:
-                    checked_message += " '%s'=%.2f" % (key, load[key])
+                checked_message += " '%s'=%s" % (key, interface[key])
+
                      
 
         elif (args['stat'] == "diskio"):
@@ -402,9 +400,9 @@ class nagiosplugin(nagiospluginskeleton):
             checked_message += _(" |")
             for key in disk:
                 if (key == "min5"): 
-                    checked_message += " '%s'=%.2f;%s;%s" % (key, load[key], warning, critical)
+                    checked_message += " '%s'=%.2f;%s;%s" % (key, disk[key], warning, critical)
                 else:
-                    checked_message += " '%s'=%.2f" % (key, load[key])
+                    checked_message += " '%s'=%.2f" % (key, disk[key])
                      
 
         elif (args['stat'] == "fs"):
