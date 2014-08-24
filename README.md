@@ -16,6 +16,11 @@ Glances server can be ran on GNU/Linux, BSD, Mac OS and Windows operating system
 
 3) Enjoy...
 
+## Be aware...
+
+Use checkglances v0.4 for Glances 1.x server
+Or checkglances v0.5 or higher for Glances 2.x (or higher)
+
 ## CLI Examples
 
 CPU

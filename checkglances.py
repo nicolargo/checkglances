@@ -20,7 +20,7 @@
 #
 
 __appname__ = 'CheckGlances'
-__version__ = "0.4"
+__version__ = "0.5"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -114,9 +114,10 @@ class nagiosplugin(nagiospluginskeleton):
                                             % ", ".join(self.statsparamslist)) 
 
 
-    def methodexist(self, server, method):
-        # Check if a method exist on the RCP server
-        return method in server.system.listMethods()
+    # def methodexist(self, server, method):
+    #     # Check if a method exist on the RCP server
+    #     # return method in server.system.listMethods()
+    #     return True
 
     
     def check(self, host, warning, critical, **args):
@@ -157,7 +158,7 @@ class nagiosplugin(nagiospluginskeleton):
             self.exit('UNKNOWN')            
         
         # DEBUG
-        #~ print gs.system.listMethods()
+        # print gs.system.listMethods()
         #~ print eval(gs.getSystem())
         # END DEBUG
         
@@ -165,17 +166,13 @@ class nagiosplugin(nagiospluginskeleton):
 
             # Get and eval CPU stat
 
-            if (self.methodexist(gs, "getCpu")):
-                try:
-                    cpu = json.loads(gs.getCpu())
-                except xmlrpclib.Fault as err:
-                    print(_("Can not run the Glances method: getCpu"))
-                    self.exit('UNKNOWN')                                
-                else:
-                    self.log(cpu)
+            try:
+                cpu = json.loads(gs.getCpu())
+            except xmlrpclib.Fault as err:
+                print(_("Can not run the Glances method: getCpu"))
+                self.exit('UNKNOWN')                                
             else:
-                print(_("Unknown method on the Glances server: getCpu"))
-                self.exit('UNKNOWN')                
+                self.log(cpu)
             #~ print cpu
             #~ If user|kernel|nice CPU is > 70%, then status is set to "WARNING".
             #~ If user|kernel|nice CPU is > 90%, then status is set to "CRITICAL".
@@ -188,32 +185,29 @@ class nagiosplugin(nagiospluginskeleton):
             checked_message += _(" | 'percent'=%.2f;0;100;%s;%s") % (checked_value, warning, critical)
             for key in cpu:
                 checked_message += " '%s'=%.2f" % (key, cpu[key])
+            
         elif (args['stat'] == "load"):
 
             # Get and eval CORE and LOAD stat
 
-            if (self.methodexist(gs, "getCore")):
-                try:
-                    core = eval(gs.getCore())
-                except xmlrpclib.Fault as err:
-                    print(_("Can not run the Glances method: getLoad"))
-                    self.exit('UNKNOWN')                                
-                else:
-                    self.log(core)
-            else:
-                print(_("Can not run the Glances method: getCore"))
+            try:
+                # Glances v2
+                core = eval(gs.getCore())["log"]
+            except KeyError:
+                # Glances v1
+                core = eval(gs.getCore())
+            except xmlrpclib.Fault as err:
+                print(_("Can not run the Glances method: getLoad"))
                 self.exit('UNKNOWN')                                
-            if (self.methodexist(gs, "getLoad")):
-                try:
-                    load = eval(gs.getLoad())
-                except xmlrpclib.Fault as err:
-                    print(_("Can not run the Glances method: getLoad"))
-                    self.exit('UNKNOWN')                                
-                else:
-                    self.log(load)
             else:
-                print(_("Unknown method on the Glances server: getLoad"))
-                self.exit('UNKNOWN')
+                self.log(core)
+            try:
+                load = eval(gs.getLoad())
+            except xmlrpclib.Fault as err:
+                print(_("Can not run the Glances method: getLoad"))
+                self.exit('UNKNOWN')                                
+            else:
+                self.log(load)
             #~ If average load is > 1*Core, then status is set to "WARNING".
             #~ If average load is > 5*Core, then status is set to "CRITICAL".
             if (warning is None): warning = 1
@@ -235,18 +229,13 @@ class nagiosplugin(nagiospluginskeleton):
         elif (args['stat'] == "mem"):
 
             # Get and eval MEM stat
-
-            if (self.methodexist(gs, "getMem")):
-                try:
-                    mem = json.loads(gs.getMem())
-                except xmlrpclib.Fault as err:
-                    print(_("Can not run the Glances method: getMem"))
-                    self.exit('UNKNOWN')                                
-                else:
-                    self.log(mem)
+            try:
+                mem = json.loads(gs.getMem())
+            except xmlrpclib.Fault as err:
+                print(_("Can not run the Glances method: getMem"))
+                self.exit('UNKNOWN')                                
             else:
-                print(_("Unknown method on the Glances server: getMem"))
-                self.exit('UNKNOWN')
+                self.log(mem)
             #~ If memory is > 70%, then status is set to "WARNING".
             #~ If memory is > 90%, then status is set to "CRITICAL"
             if (warning is None): warning = 70
@@ -266,18 +255,13 @@ class nagiosplugin(nagiospluginskeleton):
         elif (args['stat'] == "swap"):
 
             # Get and eval MEM stat
-
-            if (self.methodexist(gs, "getMemSwap")):
-                try:
-                    swap = json.loads(gs.getMemSwap())
-                except xmlrpclib.Fault as err:
-                    print(_("Can not run the Glances method: getMemSwap"))
-                    self.exit('UNKNOWN')                                
-                else:
-                    self.log(swap)
+            try:
+                swap = json.loads(gs.getMemSwap())
+            except xmlrpclib.Fault as err:
+                print(_("Can not run the Glances method: getMemSwap"))
+                self.exit('UNKNOWN')                                
             else:
-                print(_("Unknown method on the Glances server: getMemSwap"))
-                self.exit('UNKNOWN')
+                self.log(swap)
             #~ If memory is > 70%, then status is set to "WARNING".
             #~ If memory is > 90%, then status is set to "CRITICAL"
             if (warning is None): warning = 70
@@ -297,18 +281,13 @@ class nagiosplugin(nagiospluginskeleton):
         elif (args['stat'] == "process"):
 
             # Get and eval Process stat
-
-            if (self.methodexist(gs, "getProcessCount")):
-                try:
-                    process = json.loads(gs.getProcessCount())
-                except xmlrpclib.Fault as err:
-                    print(_("Can not run the Glances method: getProcessCount"))
-                    self.exit('UNKNOWN')                                
-                else:
-                    self.log(process)
+            try:
+                process = json.loads(gs.getProcessCount())
+            except xmlrpclib.Fault as err:
+                print(_("Can not run the Glances method: getProcessCount"))
+                self.exit('UNKNOWN')                                
             else:
-                print(_("Unknown method on the Glances server: getProcessCount"))
-                self.exit('UNKNOWN')
+                self.log(process)
             #~ If running process is > 50, then status is set to "WARNING".
             #~ If running process is > 100, then status is set to "CRITICAL"
             if (warning is None): warning = 50
@@ -328,18 +307,13 @@ class nagiosplugin(nagiospluginskeleton):
         elif (args['stat'] == "net"):
 
             # Get and eval Network stat
-
-            if (self.methodexist(gs, "getNetwork")):
-                try:
-                    net = json.loads(gs.getNetwork())
-                except xmlrpclib.Fault as err:
-                    print(_("Can not run the Glances method: getNetwork"))
-                    self.exit('UNKNOWN')                                
-                else:
-                    self.log(net)
+            try:
+                net = json.loads(gs.getNetwork())
+            except xmlrpclib.Fault as err:
+                print(_("Can not run the Glances method: getNetwork"))
+                self.exit('UNKNOWN')                                
             else:
-                print(_("Unknown method on the Glances server: getNetwork"))
-                self.exit('UNKNOWN')
+                self.log(net)
             #~ If net[param] > 60 Mbps, then status is set to "WARNING".
             #~ If net[param] > 80 Mbps, then status is set to "CRITICAL"
             # Values are in Kbyte/second
@@ -369,6 +343,7 @@ class nagiosplugin(nagiospluginskeleton):
             # !!! Not yet available
             # Need to implement "read_rate" and "write_rate" In Glances
             print(_("Not yet available. Sorry, had to wait next version"))
+            print(gs.getDiskIO())
             self.exit('UNKNOWN')                                
 
             if (self.methodexist(gs, "getDiskIO")):
@@ -409,17 +384,13 @@ class nagiosplugin(nagiospluginskeleton):
 
             # Get and eval Network stat
             
-            if (self.methodexist(gs, "getFs")):
-                try:
-                    fs = json.loads(gs.getFs())
-                except xmlrpclib.Fault as err:
-                    print(_("Can not run the Glances method: getFs"))
-                    self.exit('UNKNOWN')                                
-                else:
-                    self.log(fs)
+            try:
+                fs = json.loads(gs.getFs())
+            except xmlrpclib.Fault as err:
+                print(_("Can not run the Glances method: getFs"))
+                self.exit('UNKNOWN')                                
             else:
-                print(_("Unknown method on the Glances server: getFs"))
-                self.exit('UNKNOWN')
+                self.log(fs)
             #~ If fs[param] > %, then status is set to "WARNING".
             #~ If fs[param] > %, then status is set to "CRITICAL"
             if (warning is None): warning = 70
@@ -427,7 +398,7 @@ class nagiosplugin(nagiospluginskeleton):
             checked_value = -1
             for disk in fs:
                 if disk['mnt_point'] == args['statparam']:
-                    checked_value = 100 - (100 * disk["avail"] / disk["size"])
+                    checked_value = disk["percent"]
                     break
             if (checked_value == -1):
                 print(_("Unknown mounting point: %s") % args['statparam'])
