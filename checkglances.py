@@ -397,7 +397,11 @@ class nagiosplugin(nagiospluginskeleton):
             if (critical is None): critical = 90
             checked_value = -1
             for disk in fs:
-                if disk['mnt_point'] == args['statparam']:
+                mnt_point = args['statparam']
+                # If the FS looks like it is a Windows drive, automatically add the Windows slash
+                if not args['statparam'].startswith("/"):
+                        mnt_point = args['statparam'].replace(":",":\\")
+                if disk['mnt_point'] == mnt_point:
                     checked_value = disk["percent"]
                     break
             if (checked_value == -1):
