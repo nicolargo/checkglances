@@ -399,7 +399,7 @@ class nagiosplugin(nagiospluginskeleton):
             for disk in fs:
                 mnt_point = args['statparam']
                 # If the FS looks like it is a Windows drive, automatically add the Windows slash
-                if not args['statparam'].startswith("/"):
+                if not args['statparam'].startswith("/") and not args['statparam'].endswith("\\"):
                         mnt_point = args['statparam'].replace(":",":\\")
                 if disk['mnt_point'] == mnt_point:
                     checked_value = disk["percent"]
