@@ -192,17 +192,17 @@ class nagiosplugin(nagiospluginskeleton):
 
             try:
                 # Glances v2
-                core = eval(gs.getCore())["log"]
+                core = eval(gs.getCore(), {'null': None})["log"]
             except KeyError:
                 # Glances v1
-                core = eval(gs.getCore())
+                core = eval(gs.getCore(), {'null': None})
             except xmlrpclib.Fault as err:
                 print(_("Can not run the Glances method: getLoad"))
                 self.exit('UNKNOWN')                                
             else:
                 self.log(core)
             try:
-                load = eval(gs.getLoad())
+                load = eval(gs.getLoad(), {'null': None})
             except xmlrpclib.Fault as err:
                 print(_("Can not run the Glances method: getLoad"))
                 self.exit('UNKNOWN')                                
