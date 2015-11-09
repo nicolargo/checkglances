@@ -409,23 +409,14 @@ class nagiosplugin(nagiospluginskeleton):
 
             # Get and eval Network stat
 
-            # !!! Not yet available
-            # Need to implement "read_rate" and "write_rate" In Glances
-            print(_("Not yet available. Sorry, had to wait next version"))
-            print(gs.getDiskIO())
-            self.exit('UNKNOWN')
-
-            if (self.methodexist(gs, "getDiskIO")):
-                try:
-                    diskio = json.loads(gs.getDiskIO())
-                except xmlrpclib.Fault as err:
-                    print(_("Can not run the Glances method: getDiskIO"))
-                    self.exit('UNKNOWN')
-                else:
-                    self.log(diskio)
-            else:
-                print(_("Unknown method on the Glances server: getDiskIO"))
+            try:
+                diskio = json.loads(gs.getDiskIO())
+            except xmlrpclib.Fault as err:
+                print(_("Can not run the Glances method: getDiskIO"))
                 self.exit('UNKNOWN')
+            else:
+                self.log(diskio)
+
             #~ If diskio[param] > 30 Mbytes/sec, then status is set to "WARNING".
             #~ If diskio[param] > 40 MBytes/sec, then status is set to "CRITICAL"
             if (warning is None): warning = 30000000
@@ -433,7 +424,8 @@ class nagiosplugin(nagiospluginskeleton):
             checked_value = -1
             for disk in diskio:
                 if disk['disk_name'] == args['statparam']:
-                    checked_value = max(disk["read_rate"], disk["write_rate"])
+                    # checked_value = max(disk["read_bytes"], disk["write_bytes"])
+                    checked_value = disk["read_bytes"]
                     break
             if (checked_value == -1):
                 print(_("Unknown disk: %s") % args['statparam'])
@@ -443,9 +435,11 @@ class nagiosplugin(nagiospluginskeleton):
             # Performance data
             checked_message += _(" |")
             for key in disk:
-                if (key == "min5"):
+                if (key == "read_bytes"):
                     checked_message += " '%s'=%.2f;%s;%s" % (key, disk[key], warning, critical)
-                else:
+                elif (key == "write_bytes"):
+                    checked_message += " '%s'=%.2f" % (key, disk[key])
+                elif (key == "time_since_update"):
                     checked_message += " '%s'=%.2f" % (key, disk[key])
 
 
