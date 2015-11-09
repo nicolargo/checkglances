@@ -58,6 +58,8 @@ FILE SYSTEM
     $ ./checkglances.py -H localhost -s fs -e /
     FS using space: 8% | 'mnt_point'=/ 'used'=22371450880 'device_name'=/dev/sda2 'avail'=910404046848 'fs_type'=ext4 'size'=982693486592
 
+Also implemented: getDiskIO, uptime, system
+
 ## How to configure Nagios ?
 
 First of all, copy the checkglances.py file to your Nagios plugin folder.

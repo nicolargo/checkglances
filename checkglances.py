@@ -20,7 +20,7 @@
 #
 
 __appname__ = 'CheckGlances'
-__version__ = "0.5"
+__version__ = "0.6"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
