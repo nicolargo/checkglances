@@ -28,6 +28,7 @@ __licence__ = "LGPL"
 #############
 
 import sys
+import time
 import getopt
 import xmlrpclib
 import json
@@ -99,7 +100,7 @@ class nagiosplugin(nagiospluginskeleton):
     These class defines your Nagios Plugin
     """
 
-    statslist = ('system', 'cpu', 'load', 'mem', 'swap', 'process', 'net', 'diskio', 'fs')
+    statslist = ('system', 'uptime', 'cpu', 'load', 'mem', 'swap', 'process', 'net', 'diskio', 'fs')
     statsparamslist = ( 'net' , 'diskio' , 'fs')
 
     def syntax(self):
@@ -183,6 +184,48 @@ class nagiosplugin(nagiospluginskeleton):
 
             self.exit('OK')
 
+
+        elif (args['stat'] == "uptime"):
+
+            # Get and eval uptime stat
+            try:
+                uptime = json.loads(gs.getUptime())
+            except xmlrpclib.Fault as err:
+                print(_("Can not run the Glances method: getUptim"))
+                self.exit('UNKNOWN')
+            else:
+                self.log(_("Uptime: %s") % uptime)
+
+            if not uptime:
+                print(_("No uptime information available from host"))
+                self.exit('UNKNOWN')
+
+            uptime_s = time.strptime(uptime, "%H:%M:%S")
+            self.log(_("Uptime: %s") % uptime_s)
+
+            if (warning is None): warning = 15 * 60
+            if (critical is None): critical = 5 * 60
+            seconds = uptime_s.tm_hour * 3600 + uptime_s.tm_min * 60 + uptime_s.tm_sec
+
+            # Plugin output
+            checked_message = _("System uptime: %s (%d seconds)") % (uptime, seconds)
+            # Performance data
+            checked_message += _(" | 'uptime'=%ds;;;%s;%s") % (seconds, warning, critical)
+
+            # Display the message
+            self.log(_("Warning threshold: %s" % warning))
+            self.log(_("Critical threshold: %s" % critical))
+            print(checked_message)
+
+            # Return code
+            if (seconds < int(critical)):
+                self.exit('CRITICAL')
+            elif (seconds < int(warning)):
+                self.exit('WARNING')
+            else:
+                self.exit('OK')
+
+
         elif (args['stat'] == "cpu"):
 
             # Get and eval CPU stat
@@ -222,14 +265,19 @@ class nagiosplugin(nagiospluginskeleton):
                 print(_("Can not run the Glances method: getLoad"))
                 self.exit('UNKNOWN')
             else:
-                self.log(core)
+                self.log(_("Core: %d") % core)
             try:
                 load = eval(gs.getLoad(), {'null': None})
             except xmlrpclib.Fault as err:
                 print(_("Can not run the Glances method: getLoad"))
                 self.exit('UNKNOWN')
             else:
-                self.log(load)
+                self.log(_("Load: %s") % load)
+
+            if not load:
+                print(_("No load information available from host"))
+                self.exit('UNKNOWN')
+
             #~ If average load is > 1*Core, then status is set to "WARNING".
             #~ If average load is > 5*Core, then status is set to "CRITICAL".
             if (warning is None): warning = 1
@@ -520,25 +568,25 @@ def main():
     try:
         host
     except:
-        print(_("Need to specified an hostname or IP address"))
+        print(_("You need to specify an hostname or IP address"))
         plugin.exit('UNKNOWN')
     try:
         stat
     except:
-        print(_("Need to specified the stat to grab (use the -s tag)"))
+        print(_("You need to specify the stat to grab (use the -s tag)"))
         plugin.exit('UNKNOWN')
     else:
         if stat not in plugin.statslist:
             print(_("Use -s with value in %s") % ", ".join(plugin.statslist))
             plugin.exit('UNKNOWN')
         if (stat == "net") and (statparam == ""):
-            print(_("You need to specified the interface name with -e <interface>"))
+            print(_("You need to specify the interface name with -e <interface>"))
             plugin.exit('UNKNOWN')
         if (stat == "diskio") and (statparam == ""):
-            print(_("You need to specified the disk name with -e <disk>"))
+            print(_("You need to specify the disk name with -e <disk>"))
             plugin.exit('UNKNOWN')
         if (stat == "fs") and (statparam == ""):
-            print(_("You need to specified the mounting point with -e <fs>"))
+            print(_("You need to specify the mounting point with -e <fs>"))
             plugin.exit('UNKNOWN')
 
 
