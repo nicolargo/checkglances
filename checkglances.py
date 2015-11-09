@@ -525,25 +525,25 @@ def main():
     try:
         host
     except:
-        print(_("Need to specified an hostname or IP address"))
+        print(_("You need to specify an hostname or IP address"))
         plugin.exit('UNKNOWN')
     try:
         stat
     except:
-        print(_("Need to specified the stat to grab (use the -s tag)"))
+        print(_("You need to specify the stat to grab (use the -s tag)"))
         plugin.exit('UNKNOWN')
     else:
         if stat not in plugin.statslist:
             print(_("Use -s with value in %s") % ", ".join(plugin.statslist))
             plugin.exit('UNKNOWN')
         if (stat == "net") and (statparam == ""):
-            print(_("You need to specified the interface name with -e <interface>"))
+            print(_("You need to specify the interface name with -e <interface>"))
             plugin.exit('UNKNOWN')
         if (stat == "diskio") and (statparam == ""):
-            print(_("You need to specified the disk name with -e <disk>"))
+            print(_("You need to specify the disk name with -e <disk>"))
             plugin.exit('UNKNOWN')
         if (stat == "fs") and (statparam == ""):
-            print(_("You need to specified the mounting point with -e <fs>"))
+            print(_("You need to specify the mounting point with -e <fs>"))
             plugin.exit('UNKNOWN')
 
 
