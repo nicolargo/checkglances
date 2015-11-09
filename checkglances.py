@@ -222,14 +222,19 @@ class nagiosplugin(nagiospluginskeleton):
                 print(_("Can not run the Glances method: getLoad"))
                 self.exit('UNKNOWN')
             else:
-                self.log(core)
+                self.log(_("Core: %d") % core)
             try:
                 load = eval(gs.getLoad(), {'null': None})
             except xmlrpclib.Fault as err:
                 print(_("Can not run the Glances method: getLoad"))
                 self.exit('UNKNOWN')
             else:
-                self.log(load)
+                self.log(_("Load: %s") % load)
+
+            if not load:
+                print(_("No load information available from host"))
+                self.exit('UNKNOWN')
+
             #~ If average load is > 1*Core, then status is set to "WARNING".
             #~ If average load is > 5*Core, then status is set to "CRITICAL".
             if (warning is None): warning = 1
