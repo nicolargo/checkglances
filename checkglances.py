@@ -28,6 +28,7 @@ __licence__ = "LGPL"
 #############
 
 import sys
+import time
 import getopt
 import xmlrpclib
 import json
@@ -99,7 +100,7 @@ class nagiosplugin(nagiospluginskeleton):
     These class defines your Nagios Plugin
     """
 
-    statslist = ('system', 'cpu', 'load', 'mem', 'swap', 'process', 'net', 'diskio', 'fs')
+    statslist = ('system', 'uptime', 'cpu', 'load', 'mem', 'swap', 'process', 'net', 'diskio', 'fs')
     statsparamslist = ( 'net' , 'diskio' , 'fs')
 
     def syntax(self):
@@ -182,6 +183,48 @@ class nagiosplugin(nagiospluginskeleton):
                 self.exit('UNKNOWN')
 
             self.exit('OK')
+
+
+        elif (args['stat'] == "uptime"):
+
+            # Get and eval uptime stat
+            try:
+                uptime = json.loads(gs.getUptime())
+            except xmlrpclib.Fault as err:
+                print(_("Can not run the Glances method: getUptim"))
+                self.exit('UNKNOWN')
+            else:
+                self.log(_("Uptime: %s") % uptime)
+
+            if not uptime:
+                print(_("No uptime information available from host"))
+                self.exit('UNKNOWN')
+
+            uptime_s = time.strptime(uptime, "%H:%M:%S")
+            self.log(_("Uptime: %s") % uptime_s)
+
+            if (warning is None): warning = 15 * 60
+            if (critical is None): critical = 5 * 60
+            seconds = uptime_s.tm_hour * 3600 + uptime_s.tm_min * 60 + uptime_s.tm_sec
+
+            # Plugin output
+            checked_message = _("System uptime: %s (%d seconds)") % (uptime, seconds)
+            # Performance data
+            checked_message += _(" | 'uptime'=%ds;;;%s;%s") % (seconds, warning, critical)
+
+            # Display the message
+            self.log(_("Warning threshold: %s" % warning))
+            self.log(_("Critical threshold: %s" % critical))
+            print(checked_message)
+
+            # Return code
+            if (seconds < int(critical)):
+                self.exit('CRITICAL')
+            elif (seconds < int(warning)):
+                self.exit('WARNING')
+            else:
+                self.exit('OK')
+
 
         elif (args['stat'] == "cpu"):
 
